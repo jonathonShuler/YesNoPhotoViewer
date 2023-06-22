@@ -1,5 +1,6 @@
 ﻿using Microsoft.Win32;
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -22,7 +23,9 @@ namespace YesNoPhotoViewer
     /// </summary>
     public partial class MainWindow : Window
     {
-        String filePath;
+        string filePath;
+        ArrayList images = new ArrayList();
+        List<string> fileExtensions = new List<string>() { "*.jpg", "*.png" };
         public MainWindow()
         {
             InitializeComponent();
@@ -48,7 +51,36 @@ namespace YesNoPhotoViewer
                 bitmapImage.EndInit();
                 MainImage.Source = bitmapImage;
                 MainImage.Visibility = Visibility.Visible;
+                GetAllImages();
             }
+        }
+
+        private void GetAllImages()
+        {
+            FileInfo selectedFileInfo = new FileInfo(filePath);
+            DirectoryInfo? directory = selectedFileInfo.Directory;
+            if (directory != null)
+            {
+                foreach(string fileExtension in fileExtensions)
+                {
+                    foreach (FileInfo file in directory.GetFiles(fileExtension))
+                    {
+                        images.Add(file);
+                    }
+                }
+            }
+
+            Console.WriteLine(images);
+        }
+
+        private void YesToImage(object sender, RoutedEventArgs e)
+        {
+
+        }
+
+        private void NoToImage(object sender, RoutedEventArgs e)
+        {
+
         }
     }
 }
