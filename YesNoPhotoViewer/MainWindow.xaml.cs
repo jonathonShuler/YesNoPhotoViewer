@@ -23,7 +23,7 @@ namespace YesNoPhotoViewer
     /// </summary>
     public partial class MainWindow : Window
     {
-        string filePath;
+        int currentImageIndex = -1;
         ArrayList images = new ArrayList();
         List<string> fileExtensions = new List<string>() { "*.jpg", "*.png" };
         public MainWindow()
@@ -31,33 +31,30 @@ namespace YesNoPhotoViewer
             InitializeComponent();
         }
 
-        private void GetImageSource(object sender, RoutedEventArgs e)
+        private void SelectImageFromDialog(object sender, RoutedEventArgs e)
         {
-            //FolderBrowserDialog folderBrowserDialog = new FolderBrowserDialog();
-
+            string? selectedImage = null;
             OpenFileDialog openFileDialog = new OpenFileDialog();
 
             if(openFileDialog.ShowDialog() == true)
             {
-                filePath = openFileDialog.FileName;
+                selectedImage = openFileDialog.FileName;
             }
 
-            if (filePath != null)
+            if (selectedImage != null)
             {
-                ChooseImageLarge.Visibility = Visibility.Hidden;
-                BitmapImage bitmapImage = new BitmapImage();
-                bitmapImage.BeginInit();
-                bitmapImage.UriSource = new Uri(filePath);
-                bitmapImage.EndInit();
-                MainImage.Source = bitmapImage;
-                MainImage.Visibility = Visibility.Visible;
-                GetAllImages();
+                GetAllImages(selectedImage);
+                ShowImage();
+            }
+            else
+            {
+                ImageName.Content = "Image selection failed. Try again.";
             }
         }
 
-        private void GetAllImages()
+        private void GetAllImages(string selectedImage)
         {
-            FileInfo selectedFileInfo = new FileInfo(filePath);
+            FileInfo selectedFileInfo = new FileInfo(selectedImage);
             DirectoryInfo? directory = selectedFileInfo.Directory;
             if (directory != null)
             {
@@ -65,22 +62,78 @@ namespace YesNoPhotoViewer
                 {
                     foreach (FileInfo file in directory.GetFiles(fileExtension))
                     {
-                        images.Add(file);
+                        images.Add(file.FullName);
                     }
                 }
             }
+            if (images.Contains(selectedImage))
+            {
+                currentImageIndex = images.IndexOf(selectedImage);
+            }
+        }
 
-            Console.WriteLine(images);
+        private void ShowImage()
+        {
+            string? imagePath = null;
+            if (currentImageIndex > -1)
+            {
+                var image = images[currentImageIndex];
+                if (image != null)
+                {
+                    imagePath = image.ToString();
+                }
+            }
+
+            if (ChooseImageLarge.Visibility != Visibility.Hidden)
+            {
+                ChooseImageLarge.Visibility = Visibility.Hidden;
+            }
+
+            BitmapImage bitmapImage = new BitmapImage();
+            bitmapImage.BeginInit();
+            if (imagePath != null)
+            {
+                bitmapImage.UriSource = new Uri(imagePath);
+            }
+            bitmapImage.EndInit();
+
+            MainImage.Source = bitmapImage;
+            ImageName.Content = bitmapImage.UriSource.Segments.Last<string>();
+
+            if (MainImage.Visibility != Visibility.Visible)
+            {
+                MainImage.Visibility = Visibility.Visible;
+            }
         }
 
         private void YesToImage(object sender, RoutedEventArgs e)
         {
-
+            if (currentImageIndex < images.Count -1)
+            {
+                currentImageIndex++;
+                ShowImage();
+            }
         }
 
         private void NoToImage(object sender, RoutedEventArgs e)
         {
+            if (currentImageIndex > 0)
+            {
+                currentImageIndex--;
+                ShowImage();
+            }
+        }
 
+        private void Window_KeyDown(object sender, KeyEventArgs e)
+        {
+            if (e.Key == Key.Right)
+            {
+                YesToImage(sender, e);
+            }
+            else if (e.Key == Key.Left)
+            {
+                NoToImage(sender, e);
+            }
         }
     }
 }
