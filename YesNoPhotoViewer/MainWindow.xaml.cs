@@ -25,7 +25,7 @@ namespace YesNoPhotoViewer
     {
         int currentImageIndex = -1;
         ArrayList images = new ArrayList();
-        List<string> fileExtensions = new List<string>() { "*.jpg", "*.png" };
+        List<string> fileExtensions = new List<string>() { ".jpg", ".JPG", ".jpeg", ".png" };
         public MainWindow()
         {
             InitializeComponent();
@@ -58,9 +58,9 @@ namespace YesNoPhotoViewer
             DirectoryInfo? directory = selectedFileInfo.Directory;
             if (directory != null)
             {
-                foreach(string fileExtension in fileExtensions)
+                foreach (FileInfo file in directory.GetFiles())
                 {
-                    foreach (FileInfo file in directory.GetFiles(fileExtension))
+                    if (fileExtensions.Contains(file.Extension))
                     {
                         images.Add(file.FullName);
                     }
