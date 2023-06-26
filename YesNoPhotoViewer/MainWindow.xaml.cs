@@ -2,19 +2,12 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows;
-using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
 using System.Windows.Input;
-using System.Windows.Media;
 using System.Windows.Media.Imaging;
-using System.Windows.Navigation;
-using System.Windows.Shapes;
 
 namespace YesNoPhotoViewer
 {
@@ -23,7 +16,10 @@ namespace YesNoPhotoViewer
     /// </summary>
     public partial class MainWindow : Window
     {
-        int currentImageIndex = -1;
+        int selectedImageIndex = -1;
+        string? selectedImageName = null;
+        string? selectedImagePath = null;
+        DirectoryInfo? selectedImageParentDirectory;
         ArrayList images = new ArrayList();
         List<string> fileExtensions = new List<string>() { ".jpg", ".JPG", ".jpeg", ".png" };
         public MainWindow()
@@ -48,17 +44,17 @@ namespace YesNoPhotoViewer
             }
             else
             {
-                ImageName.Content = "Image selection failed. Try again.";
+                ImageLabel.Content = "Image selection failed. Try again.";
             }
         }
 
         private void GetAllImages(string selectedImage)
         {
             FileInfo selectedFileInfo = new FileInfo(selectedImage);
-            DirectoryInfo? directory = selectedFileInfo.Directory;
-            if (directory != null)
+            selectedImageParentDirectory = selectedFileInfo.Directory;
+            if (selectedImageParentDirectory != null)
             {
-                foreach (FileInfo file in directory.GetFiles())
+                foreach (FileInfo file in selectedImageParentDirectory.GetFiles())
                 {
                     if (fileExtensions.Contains(file.Extension))
                     {
@@ -68,59 +64,204 @@ namespace YesNoPhotoViewer
             }
             if (images.Contains(selectedImage))
             {
-                currentImageIndex = images.IndexOf(selectedImage);
+                selectedImageIndex = images.IndexOf(selectedImage);
             }
         }
 
         private void ShowImage()
         {
             string? imagePath = null;
-            if (currentImageIndex > -1)
+            if (selectedImageIndex > -1)
             {
-                var image = images[currentImageIndex];
-                if (image != null)
+                selectedImagePath = images[selectedImageIndex]!.ToString();
+                if (selectedImagePath != null)
                 {
-                    imagePath = image.ToString();
+                    imagePath = selectedImagePath;
+                }
+
+                if (ChooseImageLarge.Visibility != Visibility.Hidden)
+                {
+                    ChooseImageLarge.Visibility = Visibility.Hidden;
+                }
+
+                BitmapImage bitmapImage = new BitmapImage();
+                bitmapImage.BeginInit();
+                bitmapImage.CacheOption = BitmapCacheOption.OnLoad;
+
+                if (imagePath != null)
+                {
+                    bitmapImage.UriSource = new Uri(imagePath);
+                }
+
+                bitmapImage.EndInit();
+
+                MainImage.Source = bitmapImage;
+                selectedImageName = bitmapImage.UriSource.Segments.Last<string>();
+                ImageLabel.Content = selectedImageName;
+
+                if (MainImage.Visibility != Visibility.Visible)
+                {
+                    MainImage.Visibility = Visibility.Visible;
                 }
             }
-
-            if (ChooseImageLarge.Visibility != Visibility.Hidden)
+            else
             {
-                ChooseImageLarge.Visibility = Visibility.Hidden;
-            }
+                if (MainImage.Visibility != Visibility.Hidden)
+                {
+                    MainImage.Visibility = Visibility.Hidden;
+                }
 
-            BitmapImage bitmapImage = new BitmapImage();
-            bitmapImage.BeginInit();
-            if (imagePath != null)
-            {
-                bitmapImage.UriSource = new Uri(imagePath);
-            }
-            bitmapImage.EndInit();
-
-            MainImage.Source = bitmapImage;
-            ImageName.Content = bitmapImage.UriSource.Segments.Last<string>();
-
-            if (MainImage.Visibility != Visibility.Visible)
-            {
-                MainImage.Visibility = Visibility.Visible;
+                if (ChooseImageLarge.Visibility != Visibility.Visible)
+                {
+                    ChooseImageLarge.Visibility = Visibility.Visible;
+                }
+                ImageLabel.Content = "";
             }
         }
 
-        private void YesToImage(object sender, RoutedEventArgs e)
+        private void NextImage(object sender, RoutedEventArgs e)
         {
-            if (currentImageIndex < images.Count -1)
+            if (MoveMode.IsChecked == true && selectedImageIndex > -1)
             {
-                currentImageIndex++;
+                MoveToYesFolder();
+            }
+            else
+            {
+                if (selectedImageIndex < images.Count - 1)
+                {
+                    selectedImageIndex++;
+                }
                 ShowImage();
             }
         }
 
-        private void NoToImage(object sender, RoutedEventArgs e)
+        private void MoveToYesFolder()
         {
-            if (currentImageIndex > 0)
+            string sourceFile;
+            string destinationFile;
+
+            if (selectedImagePath != null && selectedImageParentDirectory != null && selectedImageName != null)
             {
-                currentImageIndex--;
+                sourceFile = selectedImagePath;
+                destinationFile = selectedImageParentDirectory.ToString() + @"\Yes\" + selectedImageName;
+
+                //Change below so it doesn't check every time?
+                if (Directory.Exists(selectedImageParentDirectory!.ToString() + @"\Yes"))
+                {
+                    Debug.WriteLine("The 'Yes' folder already exists");
+                }
+                else
+                {
+                    try
+                    {
+                        Directory.CreateDirectory(selectedImageParentDirectory!.ToString() + @"\Yes");
+                        Debug.WriteLine("Successfully created the 'Yes' folder");
+                    }
+                    catch (Exception ex)
+                    {
+                        Debug.WriteLine("Failed to create the 'Yes' folder: {0}", ex.ToString());
+                    }
+                }
+
+                if (images.Count == 0)
+                {
+                    images.RemoveAt(selectedImageIndex);
+                    selectedImageIndex = -1;
+                }
+                else if (selectedImageIndex == images.Count - 1)
+                {
+                    images.RemoveAt(selectedImageIndex);
+                    selectedImageIndex--;
+                }
+                else
+                {
+                    images.RemoveAt(selectedImageIndex);
+                }
+
                 ShowImage();
+
+                try
+                {
+                    File.Move(sourceFile, destinationFile, false);
+                }
+                catch (IOException ex)
+                {
+                    Debug.WriteLine("Failed to move the image. Source: {0}. Destination: {1}.", sourceFile, destinationFile);
+                    Debug.WriteLine(ex.ToString());
+                }
+            }
+        }
+
+        private void PreviousImage(object sender, RoutedEventArgs e)
+        {
+            if (MoveMode.IsChecked == true && selectedImageIndex > -1)
+            {
+                MoveToNoFolder();
+            }
+            else
+            {
+                if (selectedImageIndex > 0)
+                {
+                    selectedImageIndex--;
+                }
+                ShowImage();
+            }
+        }
+
+        private void MoveToNoFolder()
+        {
+            string sourceFile;
+            string destinationFile;
+
+            if (selectedImagePath != null && selectedImageParentDirectory != null && selectedImageName != null)
+            {
+                sourceFile = selectedImagePath;
+                destinationFile = selectedImageParentDirectory.ToString() + @"\No\" + selectedImageName;
+
+                //Change below so it doesn't check every time?
+                if (Directory.Exists(selectedImageParentDirectory!.ToString() + @"\No"))
+                {
+                    Debug.WriteLine("The 'No' folder already exists");
+                }
+                else
+                {
+                    try
+                    {
+                        Directory.CreateDirectory(selectedImageParentDirectory!.ToString() + @"\No");
+                        Debug.WriteLine("Successfully created the 'No' folder");
+                    }
+                    catch (Exception ex)
+                    {
+                        Debug.WriteLine("Failed to create the 'No' folder: {0}", ex.ToString());
+                    }
+                }
+
+                if (images.Count == 0)
+                {
+                    images.RemoveAt(selectedImageIndex);
+                    selectedImageIndex = -1;
+                }
+                else if (selectedImageIndex == images.Count - 1)
+                {
+                    images.RemoveAt(selectedImageIndex);
+                    selectedImageIndex--;
+                }
+                else
+                {
+                    images.RemoveAt(selectedImageIndex);
+                }
+
+                ShowImage();
+
+                try
+                {
+                    File.Move(sourceFile, destinationFile, false);
+                }
+                catch (IOException ex)
+                {
+                    Debug.WriteLine("Failed to move the image. Source: {0}. Destination: {1}.", sourceFile, destinationFile);
+                    Debug.WriteLine(ex.ToString());
+                }
             }
         }
 
@@ -128,11 +269,11 @@ namespace YesNoPhotoViewer
         {
             if (e.Key == Key.Right)
             {
-                YesToImage(sender, e);
+                NextImage(sender, e);
             }
             else if (e.Key == Key.Left)
             {
-                NoToImage(sender, e);
+                PreviousImage(sender, e);
             }
         }
     }
