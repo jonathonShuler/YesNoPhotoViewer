@@ -11,6 +11,7 @@ using System.Windows.Media.Imaging;
 
 namespace YesNoPhotoViewer
 {
+    //WPF Application
     /// <summary>
     /// Interaction logic for MainWindow.xaml
     /// </summary>
@@ -50,8 +51,10 @@ namespace YesNoPhotoViewer
 
         private void GetAllImages(string selectedImage)
         {
+            images.Clear();
             FileInfo selectedFileInfo = new FileInfo(selectedImage);
             selectedImageParentDirectory = selectedFileInfo.Directory;
+
             if (selectedImageParentDirectory != null)
             {
                 foreach (FileInfo file in selectedImageParentDirectory.GetFiles())
@@ -62,6 +65,7 @@ namespace YesNoPhotoViewer
                     }
                 }
             }
+
             if (images.Contains(selectedImage))
             {
                 selectedImageIndex = images.IndexOf(selectedImage);
