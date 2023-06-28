@@ -20,6 +20,8 @@ namespace YesNoPhotoViewer
         int selectedImageIndex = -1;
         string? selectedImageName = null;
         string? selectedImagePath = null;
+        bool yesDirectoryChecked = false;
+        bool noDirectoryChecked = false;
         DirectoryInfo? selectedImageParentDirectory;
         ArrayList images = new ArrayList();
         List<string> fileExtensions = new List<string>() { ".jpg", ".JPG", ".jpeg", ".png" };
@@ -33,7 +35,7 @@ namespace YesNoPhotoViewer
             string? selectedImage = null;
             OpenFileDialog openFileDialog = new OpenFileDialog();
 
-            if(openFileDialog.ShowDialog() == true)
+            if (openFileDialog.ShowDialog() == true)
             {
                 selectedImage = openFileDialog.FileName;
             }
@@ -77,7 +79,7 @@ namespace YesNoPhotoViewer
             string? imagePath = null;
             if (selectedImageIndex > -1)
             {
-                selectedImagePath = images[selectedImageIndex]!.ToString();
+                selectedImagePath = images[selectedImageIndex]?.ToString();
                 if (selectedImagePath != null)
                 {
                     imagePath = selectedImagePath;
@@ -149,23 +151,11 @@ namespace YesNoPhotoViewer
                 sourceFile = selectedImagePath;
                 destinationFile = selectedImageParentDirectory.ToString() + @"\Yes\" + selectedImageName;
 
-                //Change below so it doesn't check every time?
-                if (Directory.Exists(selectedImageParentDirectory!.ToString() + @"\Yes"))
+                if (!yesDirectoryChecked)
                 {
-                    Debug.WriteLine("The 'Yes' folder already exists");
+                    manageDirectory("Yes");
                 }
-                else
-                {
-                    try
-                    {
-                        Directory.CreateDirectory(selectedImageParentDirectory!.ToString() + @"\Yes");
-                        Debug.WriteLine("Successfully created the 'Yes' folder");
-                    }
-                    catch (Exception ex)
-                    {
-                        Debug.WriteLine("Failed to create the 'Yes' folder: {0}", ex.ToString());
-                    }
-                }
+
 
                 if (images.Count == 0)
                 {
@@ -222,22 +212,9 @@ namespace YesNoPhotoViewer
                 sourceFile = selectedImagePath;
                 destinationFile = selectedImageParentDirectory.ToString() + @"\No\" + selectedImageName;
 
-                //Change below so it doesn't check every time?
-                if (Directory.Exists(selectedImageParentDirectory!.ToString() + @"\No"))
+                if (!noDirectoryChecked)
                 {
-                    Debug.WriteLine("The 'No' folder already exists");
-                }
-                else
-                {
-                    try
-                    {
-                        Directory.CreateDirectory(selectedImageParentDirectory!.ToString() + @"\No");
-                        Debug.WriteLine("Successfully created the 'No' folder");
-                    }
-                    catch (Exception ex)
-                    {
-                        Debug.WriteLine("Failed to create the 'No' folder: {0}", ex.ToString());
-                    }
+                    manageDirectory("No");
                 }
 
                 if (images.Count == 0)
@@ -265,6 +242,44 @@ namespace YesNoPhotoViewer
                 {
                     Debug.WriteLine("Failed to move the image. Source: {0}. Destination: {1}.", sourceFile, destinationFile);
                     Debug.WriteLine(ex.ToString());
+                }
+            }
+        }
+
+        private void manageDirectory(string folderName)
+        {
+            if (Directory.Exists(selectedImageParentDirectory?.ToString() + @"\" + folderName))
+            {
+                Debug.WriteLine("The '{0}' folder already exists", folderName, "");
+
+                if (folderName.Equals("No"))
+                {
+                    noDirectoryChecked = true;
+                }
+                else if (folderName.Equals("Yes"))
+                {
+                    yesDirectoryChecked = true;
+                }
+            }
+            else
+            {
+                try
+                {
+                    Directory.CreateDirectory(selectedImageParentDirectory?.ToString() + @"\" + folderName);
+                    Debug.WriteLine("Successfully created the '{0}' folder", folderName, "");
+
+                    if (folderName.Equals("No"))
+                    {
+                        noDirectoryChecked = true;
+                    }
+                    else if (folderName.Equals("Yes"))
+                    {
+                        yesDirectoryChecked = true;
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Debug.WriteLine("Failed to create the folder: {0}", ex.ToString());
                 }
             }
         }
