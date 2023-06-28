@@ -54,6 +54,9 @@ namespace YesNoPhotoViewer
         private void GetAllImages(string selectedImage)
         {
             images.Clear();
+            yesDirectoryChecked = false;
+            noDirectoryChecked = false;
+
             FileInfo selectedFileInfo = new FileInfo(selectedImage);
             selectedImageParentDirectory = selectedFileInfo.Directory;
 
