@@ -9,7 +9,7 @@
         Height="450"
         Width="800"
         KeyDown="Window_KeyDown"
-        Background="Black">
+        Background="Gray">
 
     <Grid>
 
@@ -21,8 +21,7 @@
 
         <Button
             BorderThickness="0"
-            Background="Black"
-            Foreground="Gray"
+            Background="Gray"
             Name="ChooseImageLarge"
             Grid.Column="1"
             Grid.Row="0"
@@ -34,8 +33,7 @@
 
         <Button
             BorderThickness="0"
-            Background="Black"
-            Foreground="Gray"
+            Background="Gray"
             Grid.Column="0"
             Grid.Row="0"
             Content="←"
@@ -43,8 +41,7 @@
 
         <Button
             BorderThickness="0"
-            Background="Black"
-            Foreground="Gray"
+            Background="Gray"
             Grid.Column="2"
             Grid.Row="0"
             Content="→"
@@ -52,8 +49,7 @@
         
         <Button
             BorderThickness="0"
-            Background="Black"
-            Foreground="Gray"
+            Background="Gray"
             Name="ChooseImageSmall"
             Grid.Column="2"
             Grid.Row="1"
