@@ -65,7 +65,6 @@
             HorizontalAlignment="Center"/>
         
         <Label
-            Foreground="Gray"
             Name="ImageLabel"
             Grid.Column="1"
             Grid.Row="1"
