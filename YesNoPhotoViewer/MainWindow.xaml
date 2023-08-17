@@ -67,7 +67,15 @@
             IsChecked="False"
             VerticalAlignment="Center"
             HorizontalAlignment="Center"/>
-        
+
+        <Label
+            Foreground="Gray"
+            Name="CheckBoxLabel"
+            Grid.Column="1"
+            Grid.Row="1"
+            Content="Enable Sort"
+            HorizontalAlignment="Left"/>
+
         <Label
             Foreground="Gray"
             Name="ImageLabel"
